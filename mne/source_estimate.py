@@ -3522,7 +3522,8 @@ def _gen_extract_label_time_course(
     else:
         _validate_type(src, SourceSpaces)
         kind = src.kind
-    _check_option("mode", mode, _get_default_label_modes())
+    if not callable(mode):
+        _check_option("mode", mode, _get_default_label_modes())
 
     if kind in ("surface", "mixed"):
         if not isinstance(labels, list):
@@ -3537,12 +3538,13 @@ def _gen_extract_label_time_course(
     vertno = func = None
     for si, stc in enumerate(stcs):
         _validate_type(stc, _BaseSourceEstimate, "stcs[%d]" % (si,), "source estimate")
-        _check_option(
-            "mode",
-            mode,
-            _get_allowed_label_modes(stc),
-            "when using a vector and/or volume source estimate",
-        )
+        if not callable(mode):
+            _check_option(
+                "mode",
+                mode,
+                _get_allowed_label_modes(stc),
+                "when using a vector and/or volume source estimate",
+            )
         if isinstance(stc, (_BaseVolSourceEstimate, _BaseVectorSourceEstimate)):
             mode = "mean" if mode == "auto" else mode
         else:
@@ -3553,7 +3555,7 @@ def _gen_extract_label_time_course(
             label_vertidx, src_flip = _prepare_label_extraction(
                 stc, labels, src, mode, allow_empty, use_sparse
             )
-            func = _label_funcs[mode]
+            func = mode if callable(mode) else _label_funcs[mode]
         # make sure the stc is compatible with the source space
         if len(vertno) != len(stc.vertices):
             raise ValueError("stc not compatible with source space")
@@ -3569,8 +3571,9 @@ def _gen_extract_label_time_course(
             if not np.array_equal(svn, vn):
                 raise ValueError("stc not compatible with source space")
 
+        mode_str = "callable" if callable(mode) else mode
         logger.info(
-            "Extracting time courses for %d labels (mode: %s)" % (n_labels, mode)
+            "Extracting time courses for %d labels (mode: %s)" % (n_labels, mode_str)
         )
 
         # do the extraction

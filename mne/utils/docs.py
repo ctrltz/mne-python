@@ -2646,7 +2646,7 @@ docdict["method_psd_auto"] = _method_psd.format(" | ``'auto'``", "")
 docdict[
     "mode_eltc"
 ] = """
-mode : str
+mode : str | callable
     Extraction mode, see Notes.
 """
 
